@@ -29,37 +29,67 @@ def render_creed_chart(request: Request):
 
     now = datetime.now()
 
+    # Convert date strings to datetime objects
+    df["Start_dt"] = pd.to_datetime(df["Start"])
+    df["Finish_dt"] = pd.to_datetime(df["Finish"])
+    
+    # Calculate duration in days
+    df["Duration"] = (df["Finish_dt"] - df["Start_dt"]).dt.days + 1  # +1 to include end date
+    
     # Merge Budget into Task label
-    df["Label"] = df["Task"] + " (" + df["Budget"] + ")"
-    df["Color"] = df["Finish"].apply(lambda x: "green" if pd.to_datetime(x) < now else "#ff8311")
+    df["Label"] = df["Task"] + " "
+    df["Color"] = df["Finish_dt"].apply(lambda x: "green" if x < now else "#ff8311")
 
-    # Build base figure with custom bar colors
-    fig = go.Figure()
-    for _, row in df.iterrows():
-        fig.add_trace(go.Bar(
-            x=[(pd.to_datetime(row["Finish"]) - pd.to_datetime(row["Start"])).days],
-            y=[row["Label"]],
-            base=pd.to_datetime(row["Start"]),
-            orientation='h',
-            marker=dict(color=row["Color"]),
-            name=row["Label"],
-            hovertemplate=f"Task: {row['Task']}<br>Start: {row['Start']}<br>End: {row['Finish']}<br>Budget: {row['Budget']}<extra></extra>"
-        ))
+    # Build Gantt chart using plotly express (simpler approach)
+    fig = px.timeline(
+        df,
+        x_start="Start_dt",
+        x_end="Finish_dt",
+        y="Label",
+        color="Color",
+        color_discrete_map={"green": "green", "#ff8311": "#ff8311"},
+        title="CREED Timeline: Renaissance-Inspired Strategy"
+    )
+    
+    # Update traces for better hover information
+    fig.update_traces(
+        hovertemplate="<b>%{y}</b><br>" +
+                      "Start: %{x}<br>" +
+                      "End: %{customdata[0]}<br>" +
+                      "Duration: %{customdata[1]} days<br>" +
+                      "Budget: %{customdata[2]}<br>" +
+                      "<extra></extra>",
+        customdata=df[["Finish", "Duration", "Budget"]].values
+    )
 
-    # Add vertical line at current datetime
-    fig.add_vline(
+    # Add vertical line at current datetime using add_shape instead of add_vline
+    fig.add_shape(
+        type="line",
+        x0=now,
+        x1=now,
+        y0=0,
+        y1=1,
+        yref="paper",
+        line=dict(
+            color="red",
+            width=2,
+            dash="dash"
+        )
+    )
+    
+    # Add annotation for "Now" label
+    fig.add_annotation(
         x=now,
-        line_width=2,
-        line_dash="dash",
-        line_color="red",
-        annotation_text="Now",
-        annotation_position="top right"
+        y=1,
+        yref="paper",
+        text="Now",
+        showarrow=False,
+        xanchor="right",
+        yanchor="bottom"
     )
 
     fig.update_layout(
-        title="CREED Timeline: Renaissance-Inspired Strategy",
-        barmode='stack',
-        xaxis=dict(type='date', title="Date"),
+        xaxis=dict(title="Date"),
         yaxis=dict(title="Milestone"),
         height=500,
         showlegend=False,
@@ -67,3 +97,7 @@ def render_creed_chart(request: Request):
 
     chart_html = pio.to_html(fig, full_html=False, include_plotlyjs="cdn")
     return templates.TemplateResponse("chart.html", {"request": request, "chart": chart_html})
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

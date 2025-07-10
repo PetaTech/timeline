@@ -1,0 +1,61 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+
+# Environment variables
+.env
+.env.*
+
+# Pytest and coverage
+.pytest_cache/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+htmlcov/
+
+# Mypy and static analysis
+.mypy_cache/
+.dmypy.json
+pylint-report.txt
+
+# Logs
+*.log
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Jupyter notebooks (if any outputs are unwanted)
+.ipynb_checkpoints/
+
+# FastAPI-specific (optional)
+# For example, if using generated OpenAPI files
+openapi.json
+docs.json
+
+# Plotly offline charts or HTML output (if used)
+*.html
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Render or deployment-specific
+.renderrun/
